@@ -39,90 +39,64 @@
                 mode: 'light'
             },
         });
+        const WS = new WebSocket("wss://ycn24bezienswaardigheden.azurewebsites.net:8000/ws");
 
-        const App = () => {
+        function App() {
             const [response, setResponse] = React.useState("");
             const [question, setQuestion] = React.useState("");
             const [loading, setLoading] = React.useState(false);
-            const [socket, setSocket] = React.useState(null);
 
             React.useEffect(() => {
-                const newSocket = new WebSocket("wss://ycn24bezienswaardigheden.azurewebsites.net:8000/ws");
-                setSocket(newSocket);
-                return () => newSocket.close();
-            }, []);
-
-            React.useEffect(() => {
-                if (!socket) return;
-
-                socket.onmessage = (event) => {
+                WS.onmessage = (event) => {
                     setLoading(false);
                     setResponse(marked.parse(event.data));
                 };
-
-                socket.onopen = () => {
-                    console.log("WebSocket connected");
-                };
-
-                socket.onclose = () => {
-                    console.log("WebSocket closed");
-                };
-
-                return () => {
-                    socket.close();
-                };
-            }, [socket]);
-
-            const sendQuestion = () => {
-                if (!socket) {
-                    console.error('WebSocket connection is not open.');
-                    return;
-                }
-
-                setLoading(true);
-                setResponse('');
-                socket.send(question);
-            };
+            }, []);
 
             return (
-                <ThemeProvider theme={theme}>
-                    <CssBaseline />
-                    <Container maxWidth="lg">
-                        <Box sx={{ my: 4 }}>
-                            <Typography variant="h4" component="h1" gutterBottom>
-                                AI Travel Assistant
-                            </Typography>
-                            <TextField
-                                id="outlined-basic"
-                                label="Which City would you like to visit?"
-                                variant="outlined"
-                                style={{ width: '100%' }}
-                                value={question}
-                                disabled={loading}
-                                onChange={(e) => setQuestion(e.target.value)}
-                                onKeyUp={(e) => {
-                                    if (e.key === "Enter") sendQuestion();
-                                }}
-                            />
-                            <button onClick={sendQuestion} disabled={loading}>Send</button>
-                        </Box>
-                        {!response && loading && (
-                            <>
-                                <Skeleton />
-                                <Skeleton animation="wave" />
-                                <Skeleton animation={false} />
-                            </>
-                        )}
-                        {response && (
-                            <Typography dangerouslySetInnerHTML={{ __html: response }} />
-                        )}
-                    </Container>
-                </ThemeProvider>
+                <Container maxWidth="lg">
+                    <Box sx={{ my: 4 }}>
+                        <Typography variant="h4" component="h1" gutterBottom>
+                            AI Travel Assistant
+                        </Typography>
+                        <TextField
+                            id="outlined-basic"
+                            label="Which City would you like to visit?"
+                            variant="outlined"
+                            style={{ width: '100%' }}
+                            value={question}
+                            disabled={loading}
+                            onChange={e => {
+                                setQuestion(e.target.value)
+                            }}
+                            onKeyUp={e => {
+                                setLoading(false)
+                                if (e.key === "Enter") {
+                                    setResponse('')
+                                    setLoading(true)
+                                    if (WS.readyState === WebSocket.OPEN) {
+                                        WS.send(question);
+                                    } else {
+                                        console.error('WebSocket connection is not open.');
+                                    }
+                                }
+                            }}
+                        />
+                    </Box>
+                    {!response && loading && (<>
+                        <Skeleton />
+                        <Skeleton animation="wave" />
+                        <Skeleton animation={false} /></>)}
+                    {response && <Typography dangerouslySetInnerHTML={{ __html: response }} />}
+                </Container>
             );
-        };
+        }
 
         ReactDOM.createRoot(document.getElementById('root')).render(
-            <App />
+            <ThemeProvider theme={theme}>
+                <CssBaseline />
+                <App />
+            </ThemeProvider>,
         );
     </script>
 </body>
