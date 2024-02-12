@@ -12,7 +12,6 @@ from openai import AsyncOpenAI
 load_dotenv()
 
 app = FastAPI()
-app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # Set the OpenAI API key using the client object
 client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
