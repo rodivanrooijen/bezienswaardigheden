@@ -74,7 +74,11 @@
                                 if (e.key === "Enter") {
                                     setResponse('')
                                     setLoading(true)
-                                    WS.send(question);
+                                    if (WS.readyState === WebSocket.OPEN) {
+                                        WS.send(question);
+                                    } else {
+                                        console.error('WebSocket connection is not open.');
+                                    }
                                 }
                             }}
                         />
