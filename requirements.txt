@@ -4,3 +4,6 @@ gunicorn
 requests
 python-dotenv
 openai
+uvicorn[standard]
+wsproto
+websockets
